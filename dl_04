@@ -1,0 +1,100 @@
+import pandas as pd
+import numpy as np
+import re
+import string
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import classification_report
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+
+
+df = pd.read_csv("spam_or_not_spam.csv")
+
+df.columns = ['text', 'label']
+
+# 1. Text Cleaning
+def clean_text(text):
+    text = str(text)
+    text = text.lower()
+    text = re.sub(r'\d+', '', text)
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    return text.strip()
+
+df['text'] = df['text'].fillna('') # Fill NaN values with empty strings
+df['text'] = df['text'].apply(clean_text)
+
+# 2. TF-IDF Vectorization
+vectorizer = TfidfVectorizer(max_features=5000)
+X = vectorizer.fit_transform(df['text']).toarray()
+y = df['label'].values
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 3. Learning Rates to Test
+learning_rates = [0.1, 0.01, 0.001]
+
+histories = {}
+
+# 4. Train Model for Each Learning Rate
+for lr in learning_rates:
+    print(f"\nTraining with Learning Rate: {lr}")
+
+    model = Sequential([
+        Dense(1, input_dim=X_train.shape[1], activation='sigmoid')
+    ])
+    optimizer = Adam(learning_rate=lr)
+    model.compile(
+        optimizer=optimizer,
+        loss='binary_crossentropy',
+        metrics=['accuracy']
+    )
+    history = model.fit(
+        X_train,
+        y_train,
+        epochs=10,
+        batch_size=32,
+        validation_data=(X_test, y_test),
+        verbose=1
+    )
+    histories[lr] = history.history
+
+# ==========================
+# 7. Plot Accuracy Graph
+# ==========================
+plt.figure(figsize=(12,5))
+
+for lr in learning_rates:
+    plt.plot(histories[lr]['accuracy'], label=f"Train Acc (lr={lr})")
+    plt.plot(histories[lr]['val_accuracy'], linestyle='--',
+             label=f"Val Acc (lr={lr})")
+
+plt.title("Accuracy vs Epochs")
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.grid()
+plt.show()
+
+# 8. Plot Loss Graph
+plt.figure(figsize=(12,5))
+
+for lr in learning_rates:
+    plt.plot(histories[lr]['loss'], label=f"Train Loss (lr={lr})")
+    plt.plot(histories[lr]['val_loss'], linestyle='--',
+             label=f"Val Loss (lr={lr})")
+
+plt.title("Loss vs Epochs")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.legend()
+plt.grid()
+plt.show()
+print("Akshita Chauhan,465")
