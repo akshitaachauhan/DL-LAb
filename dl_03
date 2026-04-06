@@ -1,0 +1,35 @@
+import numpy as np
+
+x1, x2 = 0.6, 0.1
+y = 1
+
+w1, w2, b = 0.2, -0.3, 0.4
+lr = 0.001
+
+def sigmoid(z):
+    return 1/(1+np.exp(-z))
+
+z = w1*x1 + w2*x2 + b
+y_pred = sigmoid(z)
+
+
+dL_dy_pred = y_pred - y
+
+
+Dy_pred_dz = y_pred*(1-y_pred)
+
+dL_dz = dL_dy_pred * Dy_pred_dz
+
+dL_dw1 = dL_dz * x1
+dL_dw2 = dL_dz * x2
+dL_db = dL_dz
+
+w1 -= lr*dL_dw1
+w2 -= lr*dL_dw2
+b  -= lr*dL_db
+
+print(w1, w2, b)
+
+
+print("Akshita Chauhan,465")
+      
